@@ -1,9 +1,13 @@
-#flag -lzlib
-#include "zlib.h"
-
 module image
 
-import os //{ read, open }
+import arrays { merge }
+import os
+
+#flag -I @VROOT/c
+//#flag @VROOT/c/puff.o
+#include "puff.h"
+
+fn C.puff(&u32, charptr, &u32, charptr) int
 
 struct PNG {
 	pub:
@@ -278,7 +282,7 @@ pub fn load_png_image(path string) PNG
 				palette = chunk_data.clone()
 			}
 			'IDAT' {
-				data += chunk_data.clone() // TODO : not raw_data here, it's compressed data
+				data = merge(data, chunk_data)
 			}
 			'IEND' {
 				break
@@ -346,9 +350,11 @@ pub fn load_png_image(path string) PNG
 		}
 	}
 
-	raw_data := 
+	raw_data := charptr(0)
+	len := u64(4294967295)
+	C.puff(raw_data, &len, &data, &data.len)
 
-	return PNG {
+	/*return PNG {
 		width: 				width
 		height: 			height
 		bit_depth: 			bit_depth
@@ -382,5 +388,6 @@ pub fn load_png_image(path string) PNG
 		second: 			second
 		transparency: 		transparency
 		compressed_text: 	compressed_text
-	}
+	}*/
+	return PNG {}
 }
